@@ -17,6 +17,11 @@
     a {
       text-decoration: none;
     }
+
+    button {
+      border: 1px solid black;
+      margin-bottom: 10px;
+    }
   </style>
   <script>
     const data = {
@@ -520,39 +525,40 @@
     };
     const sorted = data.composers.sort((x, y) => x.born - y.born);
     const minDate = sorted[0].born;
-    sorted.reduce((t, v) => {
-      const ind = t.findIndex(c => c.died < v.born);
-      if (ind === -1) {
-        v['line'] = t.length;
-        t.push(v);
-        return t;
-      } else {
-        t[ind] = v;
-        v['line'] = ind;
-        return t;
-      }
-    }, []);
     const scale = 5;
-    $(document).ready(() => {
-      const divs = sorted.map((v, i) => $('<div/>', {
+    let compressed = false;
+    const setLines = () => {
+      sorted.reduce((t, v) => {
+        const ind = t.findIndex(c => c.died < v.born);
+        if (!compressed || ind === -1) {
+          v['line'] = t.length;
+          t.push(v);
+          return t;
+        } else {
+          t[ind] = v;
+          v['line'] = ind;
+          return t;
+        }
+      }, []);
+    };
+    const divs = () => sorted.map((v, i) => $('<div/>', {
         id: `c${i}`,
         "class": "composer",
         html: `<a href=${v.wiki} target=_blank>${v.surname} ${v.born}-${v.died}</a>`,
       }).css('top', `${v.line * 30}px`)
-        .css('width', `${(v.died - v.born) * scale}px`)
-        .css('left', `${(v.born - minDate) * scale}px`)
-      );
-      const timeline = $("#timeline");
-      timeline.html(divs);
-    });
-    //alert(`min: ${minDate} max: ${maxDate}`)
+      .css('width', `${(v.died - v.born) * scale}px`)
+      .css('left', `${(v.born - minDate) * scale}px`)
+    );
+    const compress = () => {
+      compressed = !compressed;
+      setLines();
+      $("#timeline").html(divs());
+    };
+    $(document).ready(compress);
   </script>
 </head>
 <body>
-<div id="timeline" class="timeline">
-  <!--  <div id="c0" class="composer">Machaut 1300-1377</div>-->
-  <!--  <div id="b1" class="composer">Dunstable 1390-1453</div>-->
-  <!--  <div id="c2" class="composer">Dufay 1397-1474</div>-->
-</div>
+  <button type="button" onclick="compress()">compress/uncomopress</button>
+  <div id="timeline" class="timeline"></div>
 </body>
 </html>
